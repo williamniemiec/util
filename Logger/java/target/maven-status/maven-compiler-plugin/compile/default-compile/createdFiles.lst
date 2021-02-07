@@ -1,0 +1,4 @@
+wniemiec\util\logger\LogMessage.class
+wniemiec\util\logger\LogView.class
+wniemiec\util\logger\Logger.class
+wniemiec\util\logger\LogLevel.class

@@ -1,0 +1,6 @@
+wniemiec\util\logger\ErrorLoggerTest.class
+wniemiec\util\logger\LoggerTest.class
+wniemiec\util\logger\WarningLoggerTest.class
+wniemiec\util\logger\OffLoggerTest.class
+wniemiec\util\logger\DebugLoggerTest.class
+wniemiec\util\logger\InfoLoggerTest.class
