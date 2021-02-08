@@ -4,12 +4,14 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>wniemiec.util</groupId>
-  <artifactId>logger</artifactId>
+  <groupId>wniemiec.util.task</groupId>
+  <artifactId>checkpoint</artifactId>
   <version>1.0.0</version>
-  <name>Logger</name>
-  <description>Displays log messages on the console.</description>
-  <url>https://github.com/williamniemiec/utils/</url>
+
+  <name>Checkpoint</name>
+  <description>A checkpoint is a class and method marker, and it is used when you want a piece of code, 
+    even if executed by several independent processes, to be executed only once.</description>
+  <url>https://github.com/williamniemiec/utils</url>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -26,13 +28,13 @@
     </dependency>
   </dependencies>
   
-  <distributionManagement>
+   <distributionManagement>
     <repository>
       <id>github</id>
       <name>GitHub williamniemiec Apache Maven Packages</name>
       <url>https://maven.pkg.github.com/williamniemiec/utils/</url>
-    </repository>
-  </distributionManagement>
+     </repository>
+   </distributionManagement>
 
   <build>
     <resources> 
@@ -44,18 +46,19 @@
         </includes>
       </resource>
     </resources>
-  
+
     <pluginManagement><!-- lock down plugins versions to avoid using Maven defaults (may be moved to parent pom) -->
       <plugins>
-        <!-- Save .jar to 'dist/x.y -->
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-jar-plugin</artifactId>
-          <version>2.3.1</version>
-          <configuration>
-            <outputDirectory>${project.build.directory}/../dist/${version.major}.x</outputDirectory>
-          </configuration>
-        </plugin>
+	    <!-- Save .jar to 'dist/x.y -->
+		  <plugin>
+			<groupId>org.apache.maven.plugins</groupId>
+			<artifactId>maven-jar-plugin</artifactId>
+			<version>2.3.1</version>
+			<configuration>
+			  <outputDirectory>${project.build.directory}/../dist/${version.major}.x</outputDirectory>
+			</configuration>
+		  </plugin>
+
         <!-- clean lifecycle, see https://maven.apache.org/ref/current/maven-core/lifecycles.html#clean_Lifecycle -->
         <plugin>
           <artifactId>maven-clean-plugin</artifactId>
