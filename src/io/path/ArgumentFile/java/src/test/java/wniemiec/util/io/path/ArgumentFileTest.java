@@ -31,7 +31,9 @@ public class ArgumentFileTest {
 	//		Initialization blocks
 	//-----------------------------------------------------------------------
 	static {
-		THIS_FOLDER = Path.of(".", "tests", "wniemiec", "util", "io", "path");
+		Path testsFolder = Path.of(".", "src", "test", "java");
+
+		THIS_FOLDER = testsFolder.resolve(Path.of("wniemiec", "util", "io", "path"));
 		
 		WORKING_DIRECTORY = Path.of(System.getProperty("java.io.tmpdir"));
 		
