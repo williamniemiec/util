@@ -158,10 +158,25 @@ public class Checkpoint {
 		if (!exists()) 
 			return false;
 		
-		boolean enabled = false;
+		return hasThreadsWaiting() || isCheckpointFileBeingUsed();
+	}
+	
+	private boolean hasThreadsWaiting() {
+		boolean threadsWaiting = false;
+		
+		lock.lock();
+		threadsWaiting = (lock.getWaitQueueLength(condLock) > 0);
+		lock.unlock();
+		
+		return threadsWaiting;
+	}
+	
+	private boolean isCheckpointFileBeingUsed() {
+		boolean beingUsed = false;
 		
 		// Tries to delete the checkpoint file. If no exception is thrown, it 
 		// means that the checkpoint is not active; otherwise, it is active
+		// (it works only on Windows)
 		try {
 			Files.delete(checkpointFile);
 			
@@ -169,10 +184,10 @@ public class Checkpoint {
 			Files.createFile(checkpointFile);
 		} 
 		catch (SecurityException | IOException e) {
-			enabled = true;
+			beingUsed = false;
 		}
 		
-		return enabled;
+		return beingUsed;
 	}
 	
 	/**
