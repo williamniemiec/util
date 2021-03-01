@@ -1,5 +1,6 @@
 package wniemiec.util.io.path;
 
+import java.io.File;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -77,7 +78,7 @@ public class ArgumentFile {
 				path = paths.get(i);
 				
 				bw.write(path.toAbsolutePath().toString().replaceAll("\\\\", "\\\\\\\\"));
-				bw.write(";\\");
+				bw.write(File.pathSeparator + "\\");
 				bw.newLine();
 			}
 			
