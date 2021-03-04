@@ -187,7 +187,7 @@ public class Checkpoint {
 			Files.createFile(checkpointFile);
 		} 
 		catch (SecurityException | IOException e) {
-			beingUsed = false;
+			beingUsed = true;
 		}
 		
 		return beingUsed;
