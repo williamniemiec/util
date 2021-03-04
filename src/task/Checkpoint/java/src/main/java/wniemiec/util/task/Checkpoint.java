@@ -162,6 +162,9 @@ public class Checkpoint {
 	}
 	
 	private boolean hasThreadsWaiting() {
+		if ((lock == null) || condLock == null)
+			return false;
+		
 		boolean threadsWaiting = false;
 		
 		lock.lock();

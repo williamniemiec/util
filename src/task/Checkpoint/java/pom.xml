@@ -6,7 +6,7 @@
 
   <groupId>wniemiec.util.task</groupId>
   <artifactId>checkpoint</artifactId>
-  <version>1.0.1</version>
+  <version>1.0.2</version>
 
   <name>Checkpoint</name>
   <description>A checkpoint is a class and method marker, and it is used when you want a piece of code, 
