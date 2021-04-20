@@ -30,7 +30,7 @@ public class CheckpointTest {
 	//		Test hooks
 	//-------------------------------------------------------------------------
 	@After
-	public void afterEachTest() throws IOException {
+	public void afterEachTest() throws IOException, InterruptedException {
 		if (checkpoint.exists())
 			checkpoint.disable();
 	}
@@ -47,7 +47,7 @@ public class CheckpointTest {
 	}
 
 	@Test
-	public void testDisable() throws IOException {
+	public void testDisable() throws IOException, InterruptedException {
 		checkpoint.enable();
 		checkpoint.disable();
 		
@@ -62,7 +62,7 @@ public class CheckpointTest {
 	}
 	
 	@Test
-	public void testDelete() throws IOException {
+	public void testDelete() throws IOException, InterruptedException {
 		checkpoint.enable();
 		checkpoint.disable();
 		checkpoint.delete();

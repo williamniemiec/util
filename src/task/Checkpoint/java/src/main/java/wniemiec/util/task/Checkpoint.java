@@ -62,6 +62,9 @@ public class Checkpoint {
 	 * open until the program ends or the checkpoint is disabled
 	 */
 	public void enable() throws IOException {
+		if (isEnabled())
+			return;
+		
 		prepareCheckpoint();
 		createCheckpoint();
 		startCheckpoint();
@@ -81,13 +84,15 @@ public class Checkpoint {
 
 	private void createCheckpoint() {
 		Runnable r = () -> {
+			lock.lock();
+			
 			try (FileReader fr = new FileReader(checkpointFile.toFile())) {
-				lock.lock();
 				condLock.await();
-				lock.unlock();
 			}
 			catch (IOException | InterruptedException e) {
 			}
+
+			lock.unlock();
 		};
 		
 		checkpointFileThread = new Thread(r);
@@ -108,10 +113,12 @@ public class Checkpoint {
 	 * 
 	 * @throws 		IOException If an error occurs when deleting the checkpoint
 	 * file
+	 * @throws 		InterruptedException If the checkpoint thread is waiting, 
+	 * sleeping, or otherwise occupied, and it is interrupted
 	 * 
 	 * @implSpec	It will disable and delete the checkpoint file
 	 */
-	public void disable() throws IOException {
+	public void disable() throws IOException, InterruptedException {
 		if (checkpointFileThread == null)
 			return;
 		
@@ -119,21 +126,17 @@ public class Checkpoint {
 		destroyCheckpoint();
 	}
 
-	private void destroyCheckpoint() throws IOException {
-		try {
-			Thread.sleep(50);
-			checkpointFileThread.join();
-			delete();
-		} 
-		catch (InterruptedException e) {
-			e.printStackTrace();
-		}
+	private void destroyCheckpoint() throws IOException, InterruptedException {
+		checkpointFileThread.join();
+		delete();
 	}
 
-	private void disableCheckpoint() {
+	private void disableCheckpoint() throws InterruptedException {
 		lock.lock();
 		condLock.signalAll();
 		lock.unlock();
+		
+		Thread.sleep(200);
 	}
 	
 	/**
@@ -175,6 +178,9 @@ public class Checkpoint {
 	}
 	
 	private boolean isCheckpointFileBeingUsed() {
+		if (!Files.exists(checkpointFile))
+			return false;
+		
 		boolean beingUsed = false;
 		
 		// Tries to delete the checkpoint file. If no exception is thrown, it 
