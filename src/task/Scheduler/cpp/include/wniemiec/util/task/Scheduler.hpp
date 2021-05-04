@@ -13,7 +13,7 @@ namespace wniemiec::util::task
     //		Attributes
     //-------------------------------------------------------------------------
     private:
-        static std::map<int, time_t> timeoutRoutine;
+        static std::map<time_t, bool> timeoutRoutine;
         static time_t currentRoutineId;
         static void (*currentRoutine)();
 
