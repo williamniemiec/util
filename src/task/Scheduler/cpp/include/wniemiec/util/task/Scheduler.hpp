@@ -35,6 +35,11 @@ namespace wniemiec::util::task
         ///
         /// <param name="function">Routine</param>
         /// <param name="timeout">Maximum execution time (in milliseconds)</param>
+        ///
+        /// <returns>
+        ///     True if the routine has not finished executing within the time
+        ///     limit; false otherwise
+        /// </returns>
         static bool set_timeout_to_routine(void (*routine)(), int timeout);
     private:
         static void* control_routine(void* args);
