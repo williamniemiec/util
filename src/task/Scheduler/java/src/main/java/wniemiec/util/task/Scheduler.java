@@ -1,7 +1,6 @@
 package wniemiec.util.task;
 
 import java.util.*;
-import java.util.concurrent.*;
 
 /**
  * Responsible for calling routines after a certain time or whenever the the 
@@ -25,6 +24,7 @@ public class Scheduler {
 	private static Map<Integer, Timer> delayRoutines = new HashMap<>();
 
 	private static Map<Long, Boolean> timeoutRoutines = new HashMap<>();
+	private static long currentTimeoutRoutineId;
 
 	
 	//-------------------------------------------------------------------------
@@ -51,7 +51,7 @@ public class Scheduler {
 	 * @throws		IllegalArgumentException If routine is null or if id or 
 	 * delay is negative
 	 */
-	public static boolean setTimeout(Runnable routine, int id, int delay) {
+	public static boolean setTimeout(Runnable routine, int id, long delay) {
 		if (routine == null)
 			throw new IllegalArgumentException("Routine cannot be null");
 		
@@ -69,7 +69,7 @@ public class Scheduler {
 		return true;
 	}
 	
-	private static Timer scheduleTimeout(Runnable routine, int delay) {
+	private static Timer scheduleTimeout(Runnable routine, long delay) {
 		Timer timer = new Timer();
 		timer.schedule(createTaskFromRoutine(routine), delay);
 		
@@ -99,7 +99,7 @@ public class Scheduler {
 	 * @throws		IllegalArgumentException If routine is null or if id or 
 	 * interval is negative
 	 */
-	public static boolean setInterval(Runnable routine, int id, int interval) {
+	public static boolean setInterval(Runnable routine, int id, long interval) {
 		if (routine == null)
 			throw new IllegalArgumentException("Routine cannot be null");
 		
@@ -117,7 +117,7 @@ public class Scheduler {
 		return true;
 	}
 	
-	private static Timer scheduleInterval(Runnable routine, int interval) {
+	private static Timer scheduleInterval(Runnable routine, long interval) {
 		Timer timer = new Timer();
 		timer.scheduleAtFixedRate(createTaskFromRoutine(routine), 0, interval);
 		
@@ -126,7 +126,7 @@ public class Scheduler {
 	
 	/**
 	 * Cancels a timed, repeating action, which was previously established by a
-	 * call to {@link #setInterval(Runnable, int, int)}.
+	 * call to {@link #setInterval(Runnable, int, long)}.
 	 * 
 	 * @param		id Routine id
 	 */
@@ -140,7 +140,7 @@ public class Scheduler {
 	
 	/**
 	 * Cancels a timed action which was previously established by a
-	 * call to {@link #setTimeout(Runnable, int, int)}.
+	 * call to {@link #setTimeout(Runnable, int, long)}.
 	 * 
 	 * @param		id Routine id
 	 */
@@ -176,46 +176,75 @@ public class Scheduler {
 	 * @throws IllegalArgumentException If routine is null or if timeout is
 	 * is negative
 	 */
-	public static boolean setTimeoutToRoutine(Runnable routine, int timeout) {
+	public static boolean setTimeoutToRoutine(Runnable routine, long timeout) {
 		if (routine == null)
 			throw new IllegalArgumentException("Routine cannot be null");
 
 		if (timeout < 0)
 			throw new IllegalArgumentException("Timeout cannot be negative");
 
-		long id = getCurrentTime();
+		runRoutine(routine);
+		waitRoutineFor(timeout);
+		finishRoutine();
 
-		Future<?> controlThread = runRoutine(routine, id);
-		waitFor(timeout);
-		finishRoutine(controlThread);
-
-		return !timeoutRoutines.get(id);
+		return !hasRoutineFinished();
 	}
 
 	private static long getCurrentTime() {
 		return new Date().getTime();
 	}
 
-	private static Future<?> runRoutine(Runnable routine, long id) {
-		ExecutorService controlService = Executors.newCachedThreadPool();
+	private static void runRoutine(Runnable routine) {
+		initializeRoutineId();
 
-		return controlService.submit(() -> {
-			timeoutRoutines.put(id, false);
+		Thread t = new Thread(() -> {
 			routine.run();
-			timeoutRoutines.put(id, true);
+
+			if (timeoutRoutines.containsKey(currentTimeoutRoutineId))
+				timeoutRoutines.put(currentTimeoutRoutineId, true);
 		});
+
+		t.setDaemon(true);
+		t.start();
 	}
 
-	private static void waitFor(int time) {
-		try {
-			Thread.sleep(time);
-		}
-		catch (InterruptedException e) {
-			// Just stop waiting
+	private static void initializeRoutineId() {
+		currentTimeoutRoutineId = getCurrentTime();
+		timeoutRoutines.put(currentTimeoutRoutineId, false);
+	}
+
+	private static void waitRoutineFor(long time) {
+		if (currentTimeoutRoutineId < 0)
+			return;
+
+		long start = getCurrentTime();
+
+		while ((timeElapsedInMilliseconds(start) < time) && !hasRoutineFinished()) {
+			try {
+				Thread.sleep(1000);
+			}
+			catch (InterruptedException e) {
+				break;
+			}
 		}
 	}
 
-	private static void finishRoutine(Future<?> controlThread) {
-		controlThread.cancel(true);
+	private static long timeElapsedInMilliseconds(long start) {
+		return (getCurrentTime() - start);
+	}
+
+	private static boolean hasRoutineFinished() {
+		if (currentTimeoutRoutineId < 0)
+			return true;
+
+		if (!timeoutRoutines.containsKey(currentTimeoutRoutineId))
+			return false;
+
+		return timeoutRoutines.get(currentTimeoutRoutineId);
+	}
+
+	private static void finishRoutine() {
+		if (!hasRoutineFinished())
+			timeoutRoutines.remove(currentTimeoutRoutineId);
 	}
 }

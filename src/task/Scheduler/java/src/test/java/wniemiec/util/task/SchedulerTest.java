@@ -12,9 +12,9 @@ public class SchedulerTest {
 	//		Attributes
 	//-------------------------------------------------------------------------
 	private static final int SCHEDULE_ID;
-	private static final int DELAY_TIME;
-	private static final int INTERVAL_TIME;
-	private static final int MAX_WAIT_TIME;
+	private static final long DELAY_TIME;
+	private static final long INTERVAL_TIME;
+	private static final long MAX_WAIT_TIME;
 	private volatile boolean insideRoutine;
 	private int totInsideRoutine;
 	
@@ -24,9 +24,9 @@ public class SchedulerTest {
 	//-------------------------------------------------------------------------
 	static {
 		SCHEDULE_ID = 1;
-		DELAY_TIME = 1000;
-		INTERVAL_TIME = 100;
-		MAX_WAIT_TIME = 1000;
+		DELAY_TIME = 1000L;
+		INTERVAL_TIME = 100L;
+		MAX_WAIT_TIME = 1000L;
 	}
 	
 	
@@ -185,7 +185,7 @@ public class SchedulerTest {
 
 			while (x >= 0)
 				x--;
-		}, MAX_WAIT_TIME);
+		}, 99000);
 
 		assertFalse(timeout);
 	}
