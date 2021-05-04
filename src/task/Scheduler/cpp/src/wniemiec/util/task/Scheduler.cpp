@@ -16,6 +16,7 @@ using namespace wniemiec::util::task;
 std::map<time_t, bool> Scheduler::timeoutRoutine = std::map<time_t, bool>();
 void (*Scheduler::currentRoutine)();
 time_t Scheduler::currentRoutineId;
+pthread_t Scheduler::controlThread;
 
 
 //-------------------------------------------------------------------------
@@ -23,29 +24,29 @@ time_t Scheduler::currentRoutineId;
 //-------------------------------------------------------------------------
 bool Scheduler::set_timeout_to_routine(void (*routine)(), int timeout)
 {
-    time_t id = get_current_time();
-    
-    pthread_t controlThread = run_routine(routine, id);
+    run_routine(routine);
     wait_for(timeout);
-    finish_routine(controlThread);
+    finish_routine();
 
-    return !timeoutRoutine[id];
+    return !has_routine_finished();
 }
 
-pthread_t Scheduler::run_routine(void (*function)(), time_t id)
+void Scheduler::run_routine(void (*function)())
 {
-    pthread_t controlThread;
-
+    initialize_routine_id();
+    
     currentRoutine = function;
-    currentRoutineId = id;
     pthread_create(&controlThread, nullptr, control_routine, nullptr);
-
-    return controlThread;
 }
 
-void Scheduler::finish_routine(pthread_t routineThread)
+void Scheduler::initialize_routine_id()
 {
-    pthread_cancel(routineThread);
+    currentRoutineId = get_current_time();
+}
+
+time_t Scheduler::get_current_time()
+{
+    return std::time(nullptr);
 }
 
 void* Scheduler::control_routine(void* args)
@@ -58,12 +59,12 @@ void* Scheduler::control_routine(void* args)
     timeoutRoutine[id] = true;
 }
 
-void Scheduler::wait_for(int time)
+void Scheduler::wait_routine_for(int time)
 {
     time_t id = currentRoutineId;
     time_t start = get_current_time();
 
-    while ((difftime(get_current_time(), start)*1000 < (double)time) && !timeoutRoutine[id])
+    while ((time_elapsed_in_milliseconds(start) < (double) time) && !has_routine_finished())
     {
         #ifdef LINUX
             sleep(1);
@@ -72,10 +73,19 @@ void Scheduler::wait_for(int time)
             Sleep(1000);
         #endif
     }
-        
 }
 
-time_t Scheduler::get_current_time()
+double Scheduler::time_elapsed_in_milliseconds(time_t start)
 {
-    return std::time(nullptr);
+    return ((difftime(get_current_time(), start) * 1000);
+}
+
+bool Scheduler::has_routine_finished()
+{
+    return timeoutRoutine[currentRoutineId];
+}
+
+void Scheduler::finish_routine()
+{
+    pthread_cancel(controlThread);
 }
