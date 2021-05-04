@@ -1,5 +1,11 @@
 #include <map>
 #include <ctime>
+#ifdef LINUX
+#   include <unistd.h>
+#endif
+#ifdef WINDOWS
+#   include <windows.h>
+#endif
 #include "../../../../include/wniemiec/util/task/Scheduler.hpp"
 
 using namespace wniemiec::util::task;
@@ -20,7 +26,7 @@ bool Scheduler::set_timeout_to_routine(void (*routine)(), int timeout)
     time_t id = get_current_time();
     
     pthread_t controlThread = run_routine(routine, id);
-    wait_for(timeout/1000);
+    wait_for(timeout);
     finish_routine(controlThread);
 
     return !timeoutRoutine[id];
@@ -46,17 +52,27 @@ void* Scheduler::control_routine(void* args)
 {
     time_t id = currentRoutineId;
     void (*routine)() = currentRoutine;
+    
     timeoutRoutine[id] = false;
     routine();
     timeoutRoutine[id] = true;
 }
 
-void Scheduler::wait_for(double time)
+void Scheduler::wait_for(int time)
 {
+    time_t id = currentRoutineId;
     time_t start = get_current_time();
 
-    while (get_current_time() - start < time)
-        ;
+    while ((difftime(get_current_time(), start)*1000 < (double)time) && !timeoutRoutine[id])
+    {
+        #ifdef LINUX
+            sleep(1);
+        #endif
+        #ifdef WINDOWS
+            Sleep(1000);
+        #endif
+    }
+        
 }
 
 time_t Scheduler::get_current_time()
