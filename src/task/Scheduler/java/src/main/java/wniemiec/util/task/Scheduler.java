@@ -1,9 +1,7 @@
 package wniemiec.util.task;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*;
+import java.util.concurrent.*;
 
 /**
  * Responsible for calling routines after a certain time or whenever the the 
@@ -24,8 +22,10 @@ public class Scheduler {
 	/**
 	 * Stores routines sent to setTimeout method along with its ids.
 	 */
-	private static Map<Integer, Timer> timeoutRoutines = new HashMap<>();
-	
+	private static Map<Integer, Timer> delayRoutines = new HashMap<>();
+
+	private static Map<Long, Boolean> timeoutRoutines = new HashMap<>();
+
 	
 	//-------------------------------------------------------------------------
 	//		Constructor
@@ -61,10 +61,10 @@ public class Scheduler {
 		if (delay < 0)
 			throw new IllegalArgumentException("Delay cannot be negative");
 		
-		if (timeoutRoutines.containsKey(id))
+		if (delayRoutines.containsKey(id))
 			return false;
 		
-		timeoutRoutines.put(id, scheduleTimeout(routine, delay));
+		delayRoutines.put(id, scheduleTimeout(routine, delay));
 		
 		return true;
 	}
@@ -145,15 +145,15 @@ public class Scheduler {
 	 * @param		id Routine id
 	 */
 	public static void clearTimeout(int id) {
-		if (!timeoutRoutines.containsKey(id))
+		if (!delayRoutines.containsKey(id))
 			return;
 		
-		timeoutRoutines.get(id).cancel();
-		timeoutRoutines.remove(id);
+		delayRoutines.get(id).cancel();
+		delayRoutines.remove(id);
 	}
 	
 	public static void clearAllTimeout() {
-		for (int timeoutId : timeoutRoutines.keySet()) {
+		for (int timeoutId : delayRoutines.keySet()) {
 			clearTimeout(timeoutId);
 		}
 	}
@@ -162,5 +162,60 @@ public class Scheduler {
 		for (int intervalId : intervalRoutines.keySet()) {
 			clearInterval(intervalId);
 		}
+	}
+
+	/**
+	 * Runs a routine within a timeout.
+	 *
+	 * @param		routine Routine
+	 * @param		timeout Maximum execution time (in milliseconds)
+	 *
+	 * @return		True if the routine has not finished executing within the
+	 * time limit; false otherwise
+	 *
+	 * @throws IllegalArgumentException If routine is null or if timeout is
+	 * is negative
+	 */
+	public static boolean setTimeoutToRoutine(Runnable routine, int timeout) {
+		if (routine == null)
+			throw new IllegalArgumentException("Routine cannot be null");
+
+		if (timeout < 0)
+			throw new IllegalArgumentException("Timeout cannot be negative");
+
+		long id = getCurrentTime();
+
+		Future<?> controlThread = runRoutine(routine, id);
+		waitFor(timeout);
+		finishRoutine(controlThread);
+
+		return !timeoutRoutines.get(id);
+	}
+
+	private static long getCurrentTime() {
+		return new Date().getTime();
+	}
+
+	private static Future<?> runRoutine(Runnable routine, long id) {
+		ExecutorService controlService = Executors.newCachedThreadPool();
+
+		return controlService.submit(() -> {
+			timeoutRoutines.put(id, false);
+			routine.run();
+			timeoutRoutines.put(id, true);
+		});
+	}
+
+	private static void waitFor(int time) {
+		try {
+			Thread.sleep(time);
+		}
+		catch (InterruptedException e) {
+			// Just stop waiting
+		}
+	}
+
+	private static void finishRoutine(Future<?> controlThread) {
+		controlThread.cancel(true);
 	}
 }

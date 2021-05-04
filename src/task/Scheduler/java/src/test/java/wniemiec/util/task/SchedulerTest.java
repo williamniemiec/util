@@ -14,6 +14,7 @@ public class SchedulerTest {
 	private static final int SCHEDULE_ID;
 	private static final int DELAY_TIME;
 	private static final int INTERVAL_TIME;
+	private static final int MAX_WAIT_TIME;
 	private volatile boolean insideRoutine;
 	private int totInsideRoutine;
 	
@@ -25,6 +26,7 @@ public class SchedulerTest {
 		SCHEDULE_ID = 1;
 		DELAY_TIME = 1000;
 		INTERVAL_TIME = 100;
+		MAX_WAIT_TIME = 1000;
 	}
 	
 	
@@ -165,7 +167,30 @@ public class SchedulerTest {
 	public void testIntervalWithNegativeDelay() {
 		Scheduler.setInterval(() -> {}, SCHEDULE_ID, -1);
 	}
-	
+
+	@Test
+	public void testSetTimeoutToRoutine() {
+		boolean timeout = Scheduler.setTimeoutToRoutine(() -> {
+			while (true)
+				;
+		}, MAX_WAIT_TIME);
+
+		assertTrue(timeout);
+	}
+
+	@Test
+	public void testSetTimeoutToRoutine2() {
+		boolean timeout = Scheduler.setTimeoutToRoutine(() -> {
+			int x = 1;
+
+			while (x >= 0)
+				x--;
+		}, MAX_WAIT_TIME);
+
+		assertFalse(timeout);
+	}
+
+
 	
 	//-------------------------------------------------------------------------
 	//		Methods
