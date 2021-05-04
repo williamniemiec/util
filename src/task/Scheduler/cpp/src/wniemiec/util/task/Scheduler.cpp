@@ -42,6 +42,7 @@ void Scheduler::run_routine(void (*function)())
 void Scheduler::initialize_routine_id()
 {
     currentRoutineId = get_current_time();
+    timeoutRoutine[currentRoutineId] = false;
 }
 
 time_t Scheduler::get_current_time()
@@ -54,7 +55,6 @@ void* Scheduler::control_routine(void* args)
     time_t id = currentRoutineId;
     void (*routine)() = currentRoutine;
     
-    timeoutRoutine[id] = false;
     routine();
     timeoutRoutine[id] = true;
 }
