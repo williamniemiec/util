@@ -15,7 +15,7 @@ time_t Scheduler::currentRoutineId;
 //-------------------------------------------------------------------------
 //		Methods
 //-------------------------------------------------------------------------
-bool Scheduler::set_timeout_to_routine(void (*routine)(), double timeout)
+bool Scheduler::set_timeout_to_routine(void (*routine)(), int timeout)
 {
     time_t id = get_current_time();
     
