@@ -43,7 +43,7 @@ namespace wniemiec::util::task
         static bool set_timeout_to_routine(void (*routine)(), int timeout);
     private:
         static void* control_routine(void* args);
-        static void wait_for(double time);
+        static void wait_for(int time);
         static time_t get_current_time();
         static pthread_t run_routine(void (*routine)(), time_t id);
         static void finish_routine(pthread_t routineThread);
