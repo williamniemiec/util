@@ -13,7 +13,7 @@ namespace wniemiec::util::task
     //		Attributes
     //-------------------------------------------------------------------------
     private:
-        static std::map<int, time_t> timeoutRoutine;
+        static std::map<time_t, bool> timeoutRoutine;
         static time_t currentRoutineId;
         static void (*currentRoutine)();
 
@@ -35,7 +35,12 @@ namespace wniemiec::util::task
         ///
         /// <param name="function">Routine</param>
         /// <param name="timeout">Maximum execution time (in milliseconds)</param>
-        static bool set_timeout_to_routine(void (*routine)(), double timeout);
+        ///
+        /// <returns>
+        ///     True if the routine has not finished executing within the time
+        ///     limit; false otherwise
+        /// </returns>
+        static bool set_timeout_to_routine(void (*routine)(), int timeout);
     private:
         static void* control_routine(void* args);
         static void wait_for(double time);
