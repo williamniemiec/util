@@ -7,7 +7,7 @@ using namespace wniemiec::util::task;
 //-------------------------------------------------------------------------
 //		Attributes
 //-------------------------------------------------------------------------
-std::map<int, time_t> Scheduler::timeoutRoutine = std::map<int, time_t>();
+std::map<time_t, bool> Scheduler::timeoutRoutine = std::map<time_t, bool>();
 void (*Scheduler::currentRoutine)();
 time_t Scheduler::currentRoutineId;
 
