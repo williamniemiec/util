@@ -16,6 +16,7 @@ namespace wniemiec::util::task
         static std::map<time_t, bool> timeoutRoutine;
         static time_t currentRoutineId;
         static void (*currentRoutine)();
+        static pthread_t controlThread;
 
 
     //-------------------------------------------------------------------------
@@ -42,10 +43,13 @@ namespace wniemiec::util::task
         /// </returns>
         static bool set_timeout_to_routine(void (*routine)(), int timeout);
     private:
-        static void* control_routine(void* args);
-        static void wait_for(int time);
+        static void run_routine(void (*routine)(), time_t id);
+        static void initialize_routine_id();
         static time_t get_current_time();
-        static pthread_t run_routine(void (*routine)(), time_t id);
+        static void* control_routine(void* args);
+        static void wait_routine_for(int time);
+        static double time_elapsed_in_milliseconds(time_t start);
+        static bool has_routine_finished();
         static void finish_routine(pthread_t routineThread);
     };
 }
