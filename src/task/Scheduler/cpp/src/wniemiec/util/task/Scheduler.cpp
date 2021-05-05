@@ -67,10 +67,10 @@ void Scheduler::wait_routine_for(long time)
     while ((time_elapsed_in_milliseconds(start) < (double) time) && !has_routine_finished())
     {
         #ifdef LINUX
-            sleep(1);
+            usleep(200 * 1000);
         #endif
         #ifdef WINDOWS
-            Sleep(1000);
+            Sleep(200);
         #endif
     }
 }
