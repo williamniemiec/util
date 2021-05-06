@@ -4,6 +4,8 @@ import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.junit.Test;
 
@@ -35,6 +37,17 @@ public class FileSearcherTest {
 		assertEquals(thisFile.toAbsolutePath(), searcher.search("FileSearcherTest.java"));
 	}
 
+	@Test
+	public void testSearchAllFilesWithExtension() throws IOException {
+		FileSearcher searcher = new FileSearcher(TESTS_FOLDER);
+		Path thisFile = TESTS_FOLDER.resolve(Path.of("wniemiec", "util", "io", "search",
+				"FileSearcherTest.java"));
+		Set<Path> expectedFiles = new HashSet<>();
+		expectedFiles.add(thisFile.toAbsolutePath().normalize());
+
+		assertEquals(expectedFiles, searcher.searchAllFilesWithExtension("java"));
+	}
+
 	@Test(expected = IllegalArgumentException.class)
 	public void testConstructorNullWorkingDirectory() {
 		new FileSearcher(null);
@@ -52,5 +65,19 @@ public class FileSearcherTest {
 		FileSearcher searcher = new FileSearcher(TESTS_FOLDER);
 		
 		searcher.search("");
+	}
+
+	@Test(expected = IllegalArgumentException.class)
+	public void testSearchAllFilesWithEmptyExtension() throws IOException {
+		FileSearcher searcher = new FileSearcher(TESTS_FOLDER);
+
+		searcher.searchAllFilesWithExtension("");
+	}
+
+	@Test(expected = IllegalArgumentException.class)
+	public void testSearchAllFilesWithNullExtension() throws IOException {
+		FileSearcher searcher = new FileSearcher(TESTS_FOLDER);
+
+		searcher.searchAllFilesWithExtension(null);
 	}
 }

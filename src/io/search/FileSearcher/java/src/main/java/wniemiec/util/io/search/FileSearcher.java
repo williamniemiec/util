@@ -6,6 +6,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Searches for files.
@@ -18,7 +20,7 @@ public class FileSearcher {
 	//		Attributes
 	//-------------------------------------------------------------------------
 	private Path searchFile;
-	private Path workingDirectory;
+	private final Path workingDirectory;
 
 	
 	//-------------------------------------------------------------------------
@@ -50,6 +52,41 @@ public class FileSearcher {
 	//-------------------------------------------------------------------------
 	//		Methods
 	//-------------------------------------------------------------------------
+	/**
+	 * Searches for all files with an extension starting from the specified
+	 * working directory.
+	 *
+	 * @param		extension File extension (without dot)
+	 *
+	 * @return		Files with the specified extension or empty set if no files
+	 * are found
+	 *
+	 * @throws		IOException If an error occurs while searching for the file
+	 * @throws		IllegalArgumentException If extension is blank or null
+	 */
+	public Set<Path> searchAllFilesWithExtension(String extension) throws IOException {
+		if ((extension == null) || extension.isBlank())
+			throw new IllegalArgumentException("Extension cannot be empty");
+
+		Set<Path> paths = new HashSet<>();
+		String normalizedExtension = (extension.charAt(0) == '.')
+				? extension.substring(1)
+				: extension;
+
+		Files.walkFileTree(workingDirectory, new SimpleFileVisitor<Path>() {
+			@Override
+			public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
+				if (file.toString().endsWith("." + extension)) {
+					paths.add(file.toAbsolutePath().normalize());
+				}
+
+				return FileVisitResult.CONTINUE;
+			}
+		});
+
+		return paths;
+	}
+
 	/**
 	 * Searches for a file starting from the specified working directory.
 	 * 
