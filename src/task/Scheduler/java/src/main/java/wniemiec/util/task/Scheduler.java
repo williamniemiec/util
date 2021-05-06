@@ -221,7 +221,7 @@ public class Scheduler {
 
 		while ((timeElapsedInMilliseconds(start) < time) && !hasRoutineFinished()) {
 			try {
-				Thread.sleep(1000);
+				Thread.sleep(200);
 			}
 			catch (InterruptedException e) {
 				break;
