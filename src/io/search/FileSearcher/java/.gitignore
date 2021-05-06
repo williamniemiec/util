@@ -1,5 +1,7 @@
 # Project
 .settings/
+*.iml
+.idea/
 
 # Maven
 target/
