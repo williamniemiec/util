@@ -22,10 +22,10 @@ pthread_t Scheduler::controlThread;
 //-------------------------------------------------------------------------
 //		Methods
 //-------------------------------------------------------------------------
-bool Scheduler::set_timeout_to_routine(void (*routine)(), int timeout)
+bool Scheduler::set_timeout_to_routine(void (*routine)(), long timeout)
 {
     run_routine(routine);
-    wait_for(timeout);
+    wait_routine_for(timeout);
     finish_routine();
 
     return !has_routine_finished();
@@ -59,7 +59,7 @@ void* Scheduler::control_routine(void* args)
     timeoutRoutine[id] = true;
 }
 
-void Scheduler::wait_routine_for(int time)
+void Scheduler::wait_routine_for(long time)
 {
     time_t id = currentRoutineId;
     time_t start = get_current_time();
@@ -67,17 +67,17 @@ void Scheduler::wait_routine_for(int time)
     while ((time_elapsed_in_milliseconds(start) < (double) time) && !has_routine_finished())
     {
         #ifdef LINUX
-            sleep(1);
+            usleep(200 * 1000);
         #endif
         #ifdef WINDOWS
-            Sleep(1000);
+            Sleep(200);
         #endif
     }
 }
 
 double Scheduler::time_elapsed_in_milliseconds(time_t start)
 {
-    return ((difftime(get_current_time(), start) * 1000);
+    return (difftime(get_current_time(), start) * 1000);
 }
 
 bool Scheduler::has_routine_finished()
