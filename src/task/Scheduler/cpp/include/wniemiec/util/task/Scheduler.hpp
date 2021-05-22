@@ -4,9 +4,9 @@
 
 namespace wniemiec::util::task
 {
-    /// <summary>
-    ///     Responsible for executing routines within time intervals.
-    /// </summary
+    /**
+     * Responsible for executing routines within time intervals.
+     */
     class Scheduler
     {
     //-------------------------------------------------------------------------
@@ -30,17 +30,15 @@ namespace wniemiec::util::task
     //		Methods
     //-------------------------------------------------------------------------
     public:
-        /// <summary>
-        ///     Runs a routine within a timeout.
-        /// </summary>
-        ///
-        /// <param name="function">Routine</param>
-        /// <param name="timeout">Maximum execution time (in milliseconds)</param>
-        ///
-        /// <returns>
-        ///     True if the routine has not finished executing within the time
-        ///     limit; false otherwise
-        /// </returns>
+        /**
+         * Runs a routine within a timeout.
+         *
+         * @param       routine Routine
+         * @param       timeout Maximum execution time (in milliseconds)
+         *
+         * @return True if the routine has not finished executing within the time
+         * limit; false otherwise
+         */
         static bool set_timeout_to_routine(void (*routine)(), long timeout);
     private:
         static void run_routine(void (*routine)());
