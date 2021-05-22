@@ -15,6 +15,7 @@ std::function<void(void)> null_routine = [](){};
 //-------------------------------------------------------------------------
 //		Attributes
 //-------------------------------------------------------------------------
+std::map<long, bool> Scheduler::delayRoutines = std::map<long, bool>();
 std::map<long, bool> Scheduler::intervalRoutines = std::map<long, bool>();
 std::map<long, bool> Scheduler::timeoutRoutine = std::map<time_t, bool>();
 std::function<void(void)>& Scheduler::currentRoutine = null_routine;
@@ -25,6 +26,46 @@ pthread_t Scheduler::controlThread;
 //-------------------------------------------------------------------------
 //		Methods
 //-------------------------------------------------------------------------
+long Scheduler::set_timeout(const std::function<void(void)>& routine, long delay)
+{
+    initialize_routine_id();
+    currentRoutine = routine;
+
+    pthread_t thread;
+    pthread_create(&thread, nullptr, delay_control_routine, (void*) delay);
+
+    return currentRoutineId;
+}
+
+void Scheduler::initialize_routine_id()
+{
+    currentRoutineId = get_current_time();
+}
+
+void* Scheduler::delay_control_routine(void* arg)
+{
+    long delay = (long) arg;
+    long id = currentRoutineId;
+    const std::function<void(void)>& routine = currentRoutine;
+
+    delayRoutines[id] = true;
+
+    #ifdef LINUX
+        usleep(interval * 1000);
+    #endif
+    #ifdef WINDOWS
+        Sleep(interval);
+    #endif
+
+    if (delayRoutines[id])
+        routine();
+}
+
+void Scheduler::clear_timeout(long id)
+{
+    delayRoutines[id] = false;
+}
+
 long Scheduler::set_interval(const std::function<void(void)>& routine, long interval)
 {
     initialize_routine_id();
@@ -34,11 +75,6 @@ long Scheduler::set_interval(const std::function<void(void)>& routine, long inte
     pthread_create(&thread, nullptr, interval_control_routine, (void*) interval);
 
     return currentRoutineId;
-}
-
-void Scheduler::initialize_routine_id()
-{
-    currentRoutineId = get_current_time();
 }
 
 void* Scheduler::interval_control_routine(void* arg)

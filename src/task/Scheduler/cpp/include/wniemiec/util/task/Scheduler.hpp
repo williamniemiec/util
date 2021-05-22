@@ -15,6 +15,7 @@ namespace wniemiec::util::task
     //		Attributes
     //-------------------------------------------------------------------------
     private:
+        static std::map<long, bool> delayRoutines;
         static std::map<long, bool> intervalRoutines;
         static std::map<long, bool> timeoutRoutine;
         static long currentRoutineId;
@@ -33,14 +34,32 @@ namespace wniemiec::util::task
     //		Methods
     //-------------------------------------------------------------------------
     public:
-        static long set_
+        /**
+         * Sets a timer which executes a routine once the timer expires.
+         *
+         * @param       routine Routine to be performed
+         * @param       delay Waiting time before the routine is executed (in
+         * milliseconds)
+         *
+         * @return      Routine id, being useful for future cancellation
+         */
+        static long set_timeout(const std::function<void(void)>& routine, long delay);
+
+        /**
+         * Cancels a timed action which was previously established by a call
+         * to {@link Scheduler::set_timeout}.
+         *
+         * @param       id Routine id
+         */
+        static void clear_timeout(long id);
 
         /**
          * Repeatedly calls a routine with a fixed time delay between each
          * call.
          *
          * @param       routine Routine to be performed
-         * @param       interval Interval that the routine will be invoked (in milliseconds)
+         * @param       interval Interval that the routine will be invoked (in
+         * milliseconds)
          *
          * @return      Routine id, being useful for future cancellation
          *
@@ -49,8 +68,8 @@ namespace wniemiec::util::task
         static long set_interval(const std::function<void(void)>& routine, long interval);
 
         /**
-         * Cancels a timed, repeating action, which was previously established by a
-         * call to {@link Scheduler::set_interval}.
+         * Cancels a timed, repeating action, which was previously established
+         * by a call to {@link Scheduler::set_interval}.
          *
          * @param       id Routine identifier
          */
@@ -62,14 +81,15 @@ namespace wniemiec::util::task
          * @param       routine Routine
          * @param       timeout Maximum execution time (in milliseconds)
          *
-         * @return      True if the routine has not finished executing within the time
-         * limit; false otherwise
+         * @return      True if the routine has not finished executing within
+         * the time limit; false otherwise
          */
         static bool set_timeout_to_routine(const std::function<void(void)>& routine, long timeout);
     private:
         static void run_routine(const std::function<void(void)>& routine);
         static void initialize_routine_id();
         static time_t get_current_time();
+        static void* delay_control_routine(void* arg);
         static void* interval_control_routine(void* args);
         static void* control_routine(void* args);
         static void wait_routine_for(long time);
