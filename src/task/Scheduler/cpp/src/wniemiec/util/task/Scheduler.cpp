@@ -51,10 +51,10 @@ void* Scheduler::delay_control_routine(void* arg)
     delayRoutines[id] = true;
 
     #ifdef LINUX
-        usleep(interval * 1000);
+        usleep(delay * 1000);
     #endif
     #ifdef WINDOWS
-        Sleep(interval);
+        Sleep(delay);
     #endif
 
     if (delayRoutines[id])
@@ -138,7 +138,6 @@ void* Scheduler::control_routine(void* args)
 
 void Scheduler::wait_routine_for(long time)
 {
-    time_t id = currentRoutineId;
     time_t start = get_current_time();
 
     while ((time_elapsed_in_milliseconds(start) < (double) time) && !has_routine_finished())
