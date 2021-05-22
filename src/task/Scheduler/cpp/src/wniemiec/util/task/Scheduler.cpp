@@ -1,4 +1,5 @@
-#include <map>
+#include "../../../../include/wniemiec/util/task/Scheduler.hpp"
+
 #include <ctime>
 #ifdef LINUX
 #   include <unistd.h>
@@ -6,23 +7,67 @@
 #ifdef WINDOWS
 #   include <windows.h>
 #endif
-#include "../../../../include/wniemiec/util/task/Scheduler.hpp"
 
 using namespace wniemiec::util::task;
+
+std::function<void(void)> null_routine = [](){};
 
 //-------------------------------------------------------------------------
 //		Attributes
 //-------------------------------------------------------------------------
-std::map<time_t, bool> Scheduler::timeoutRoutine = std::map<time_t, bool>();
-void (*Scheduler::currentRoutine)();
-time_t Scheduler::currentRoutineId;
+std::map<long, bool> Scheduler::intervalRoutines = std::map<long, bool>();
+std::map<long, bool> Scheduler::timeoutRoutine = std::map<time_t, bool>();
+std::function<void(void)>& Scheduler::currentRoutine = null_routine;
+long Scheduler::currentRoutineId;
 pthread_t Scheduler::controlThread;
 
 
 //-------------------------------------------------------------------------
 //		Methods
 //-------------------------------------------------------------------------
-bool Scheduler::set_timeout_to_routine(void (*routine)(), long timeout)
+long Scheduler::set_interval(const std::function<void(void)>& routine, long interval)
+{
+    initialize_routine_id();
+    currentRoutine = routine;
+
+    pthread_t thread;
+    pthread_create(&thread, nullptr, interval_control_routine, (void*) interval);
+
+    return currentRoutineId;
+}
+
+void Scheduler::initialize_routine_id()
+{
+    currentRoutineId = get_current_time();
+}
+
+void* Scheduler::interval_control_routine(void* arg)
+{
+    long interval = (long) arg;
+    long id = currentRoutineId;
+    const std::function<void(void)>& routine = currentRoutine;
+
+    intervalRoutines[id] = true;
+
+    while (intervalRoutines[id])
+    {
+        routine();
+
+        #ifdef LINUX
+            usleep(interval * 1000);
+        #endif
+        #ifdef WINDOWS
+            Sleep(interval);
+        #endif
+    }
+}
+
+void Scheduler::clear_interval(long id)
+{
+    intervalRoutines[id] = false;
+}
+
+bool Scheduler::set_timeout_to_routine(const std::function<void(void)>& routine, long timeout)
 {
     run_routine(routine);
     wait_routine_for(timeout);
@@ -31,18 +76,14 @@ bool Scheduler::set_timeout_to_routine(void (*routine)(), long timeout)
     return !has_routine_finished();
 }
 
-void Scheduler::run_routine(void (*function)())
+void Scheduler::run_routine(const std::function<void(void)>& routine)
 {
     initialize_routine_id();
-    
-    currentRoutine = function;
-    pthread_create(&controlThread, nullptr, control_routine, nullptr);
-}
 
-void Scheduler::initialize_routine_id()
-{
-    currentRoutineId = get_current_time();
     timeoutRoutine[currentRoutineId] = false;
+    currentRoutine = routine;
+
+    pthread_create(&controlThread, nullptr, control_routine, nullptr);
 }
 
 time_t Scheduler::get_current_time()
@@ -53,8 +94,8 @@ time_t Scheduler::get_current_time()
 void* Scheduler::control_routine(void* args)
 {
     time_t id = currentRoutineId;
-    void (*routine)() = currentRoutine;
-    
+    std::function<void(void)>& routine = currentRoutine;
+
     routine();
     timeoutRoutine[id] = true;
 }
