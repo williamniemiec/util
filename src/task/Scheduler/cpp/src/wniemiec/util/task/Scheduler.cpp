@@ -1,12 +1,8 @@
 #include "../../../../include/wniemiec/util/task/Scheduler.hpp"
 
 #include <ctime>
-#ifdef LINUX
-#   include <unistd.h>
-#endif
-#ifdef WINDOWS
-#   include <windows.h>
-#endif
+#include <chrono>
+#include <thread>
 
 using namespace wniemiec::util::task;
 
@@ -47,18 +43,18 @@ void* Scheduler::delay_control_routine(void* arg)
     long delay = (long) arg;
     long id = currentRoutineId;
     const std::function<void(void)>& routine = currentRoutine;
+    
+    if (delay < 0)
+        throw std::invalid_argument("Delay cannot be negative");
 
     delayRoutines[id] = true;
 
-    #ifdef LINUX
-        usleep(delay * 1000);
-    #endif
-    #ifdef WINDOWS
-        Sleep(delay);
-    #endif
+    std::this_thread::sleep_for(std::chrono::milliseconds(delay));
 
     if (delayRoutines[id])
         routine();
+    
+    return nullptr;
 }
 
 void Scheduler::clear_timeout(long id)
@@ -83,19 +79,18 @@ void* Scheduler::interval_control_routine(void* arg)
     long id = currentRoutineId;
     const std::function<void(void)>& routine = currentRoutine;
 
+    if (interval < 0)
+        throw std::invalid_argument("Interval cannot be negative");
+    
     intervalRoutines[id] = true;
 
     while (intervalRoutines[id])
     {
+        std::this_thread::sleep_for(std::chrono::milliseconds(interval));
         routine();
-
-        #ifdef LINUX
-            usleep(interval * 1000);
-        #endif
-        #ifdef WINDOWS
-            Sleep(interval);
-        #endif
     }
+    
+    return nullptr;
 }
 
 void Scheduler::clear_interval(long id)
@@ -134,6 +129,8 @@ void* Scheduler::control_routine(void* args)
 
     routine();
     timeoutRoutine[id] = true;
+    
+    return nullptr;
 }
 
 void Scheduler::wait_routine_for(long time)
@@ -142,12 +139,7 @@ void Scheduler::wait_routine_for(long time)
 
     while ((time_elapsed_in_milliseconds(start) < (double) time) && !has_routine_finished())
     {
-        #ifdef LINUX
-            usleep(200 * 1000);
-        #endif
-        #ifdef WINDOWS
-            Sleep(200);
-        #endif
+        std::this_thread::sleep_for(std::chrono::milliseconds(200));
     }
 }
 
