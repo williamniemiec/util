@@ -4,7 +4,7 @@
 #include <pthread.h>
 #include <map>
 
-namespace wniemiec::util::task
+namespace wniemiec {namespace util {namespace task
 {
     /**
      * Responsible for executing routines within time intervals.
@@ -97,4 +97,4 @@ namespace wniemiec::util::task
         static bool has_routine_finished();
         static void finish_routine();
     };
-}
+}}}
