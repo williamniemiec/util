@@ -15,12 +15,12 @@ namespace wniemiec {namespace util {namespace task
     //		Attributes
     //-------------------------------------------------------------------------
     private:
-        static std::map<unsigned long, bool> delayRoutines;
-        static std::map<unsigned long, bool> intervalRoutines;
-        static std::map<unsigned long, bool> timeoutRoutine;
-        static unsigned long currentRoutineId;
-        static std::function<void(void)>& currentRoutine;
-        static pthread_t controlThread;
+        static std::map<unsigned long, bool> delay_routines;
+        static std::map<unsigned long, bool> interval_routines;
+        static std::map<unsigned long, bool> timeout_routine;
+        static unsigned long current_routine_id;
+        static std::function<void(void)>& current_routine;
+        static pthread_t control_thread;
 
 
     //-------------------------------------------------------------------------
