@@ -11,18 +11,18 @@ std::function<void(void)> null_routine = [](){};
 //-------------------------------------------------------------------------
 //		Attributes
 //-------------------------------------------------------------------------
-std::map<long, bool> Scheduler::delayRoutines = std::map<long, bool>();
-std::map<long, bool> Scheduler::intervalRoutines = std::map<long, bool>();
-std::map<long, bool> Scheduler::timeoutRoutine = std::map<time_t, bool>();
+std::map<unsigned long, bool> Scheduler::delayRoutines = std::map<unsigned long, bool>();
+std::map<unsigned long, bool> Scheduler::intervalRoutines = std::map<unsigned long, bool>();
+std::map<unsigned long, bool> Scheduler::timeoutRoutine = std::map<unsigned lonf, bool>();
 std::function<void(void)>& Scheduler::currentRoutine = null_routine;
-long Scheduler::currentRoutineId;
+unsigned long Scheduler::currentRoutineId;
 pthread_t Scheduler::controlThread;
 
 
 //-------------------------------------------------------------------------
 //		Methods
 //-------------------------------------------------------------------------
-long Scheduler::set_timeout(const std::function<void(void)>& routine, long delay)
+unsigned long Scheduler::set_timeout(const std::function<void(void)>& routine, long delay)
 {
     initialize_routine_id();
     currentRoutine = routine;
@@ -35,13 +35,14 @@ long Scheduler::set_timeout(const std::function<void(void)>& routine, long delay
 
 void Scheduler::initialize_routine_id()
 {
+    std::this_thread::sleep_for(std::chrono::seconds(1));
     currentRoutineId = get_current_time();
 }
 
 void* Scheduler::delay_control_routine(void* arg)
 {
     long delay = (long) arg;
-    long id = currentRoutineId;
+    unsigned long id = currentRoutineId;
     const std::function<void(void)>& routine = currentRoutine;
     
     if (delay < 0)
@@ -57,12 +58,12 @@ void* Scheduler::delay_control_routine(void* arg)
     return nullptr;
 }
 
-void Scheduler::clear_timeout(long id)
+void Scheduler::clear_timeout(unsignedlong id)
 {
     delayRoutines[id] = false;
 }
 
-long Scheduler::set_interval(const std::function<void(void)>& routine, long interval)
+unsigned long Scheduler::set_interval(const std::function<void(void)>& routine, long interval)
 {
     initialize_routine_id();
     currentRoutine = routine;
@@ -76,7 +77,7 @@ long Scheduler::set_interval(const std::function<void(void)>& routine, long inte
 void* Scheduler::interval_control_routine(void* arg)
 {
     long interval = (long) arg;
-    long id = currentRoutineId;
+    unsigned long id = currentRoutineId;
     const std::function<void(void)>& routine = currentRoutine;
 
     if (interval < 0)
@@ -93,7 +94,7 @@ void* Scheduler::interval_control_routine(void* arg)
     return nullptr;
 }
 
-void Scheduler::clear_interval(long id)
+void Scheduler::clear_interval(unsigned long id)
 {
     intervalRoutines[id] = false;
 }
