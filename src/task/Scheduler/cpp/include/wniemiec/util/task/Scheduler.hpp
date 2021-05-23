@@ -15,10 +15,10 @@ namespace wniemiec {namespace util {namespace task
     //		Attributes
     //-------------------------------------------------------------------------
     private:
-        static std::map<long, bool> delayRoutines;
-        static std::map<long, bool> intervalRoutines;
-        static std::map<long, bool> timeoutRoutine;
-        static long currentRoutineId;
+        static std::map<unsigned long, bool> delayRoutines;
+        static std::map<unsigned long, bool> intervalRoutines;
+        static std::map<unsigned long, bool> timeoutRoutine;
+        static unsigned long currentRoutineId;
         static std::function<void(void)>& currentRoutine;
         static pthread_t controlThread;
 
@@ -43,7 +43,7 @@ namespace wniemiec {namespace util {namespace task
          *
          * @return      Routine id, being useful for future cancellation
          */
-        static long set_timeout(const std::function<void(void)>& routine, long delay);
+        static unsigned long set_timeout(const std::function<void(void)>& routine, long delay);
 
         /**
          * Cancels a timed action which was previously established by a call
@@ -51,7 +51,7 @@ namespace wniemiec {namespace util {namespace task
          *
          * @param       id Routine id
          */
-        static void clear_timeout(long id);
+        static void clear_timeout(unsigned long id);
 
         /**
          * Repeatedly calls a routine with a fixed time delay between each
@@ -65,7 +65,7 @@ namespace wniemiec {namespace util {namespace task
          *
          * @see         Scheduler::clear_interval
          */
-        static long set_interval(const std::function<void(void)>& routine, long interval);
+        static unsigned long set_interval(const std::function<void(void)>& routine, long interval);
 
         /**
          * Cancels a timed, repeating action, which was previously established
@@ -73,7 +73,7 @@ namespace wniemiec {namespace util {namespace task
          *
          * @param       id Routine identifier
          */
-        static void clear_interval(long id);
+        static void clear_interval(unsigned long id);
 
         /**
          * Runs a routine within a timeout.
