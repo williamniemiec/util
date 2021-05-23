@@ -43,7 +43,7 @@ void* Scheduler::delay_control_routine(void* arg)
 {
     long delay = (long) arg;
     unsigned long id = currentRoutineId;
-    const std::function<void(void)>& routine = currentRoutine;
+    const std::function<void(void)> routine = currentRoutine;
     
     if (delay < 0)
         throw std::invalid_argument("Delay cannot be negative");
@@ -78,7 +78,7 @@ void* Scheduler::interval_control_routine(void* arg)
 {
     long interval = (long) arg;
     unsigned long id = currentRoutineId;
-    const std::function<void(void)>& routine = currentRoutine;
+    const std::function<void(void)> routine = currentRoutine;
 
     if (interval < 0)
         throw std::invalid_argument("Interval cannot be negative");
