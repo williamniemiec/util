@@ -6,7 +6,9 @@ import java.util.*;
  * Responsible for calling routines after a certain time or whenever the the 
  * timer expires.
  * 
- * @author		William Niemiec &lt; williamniemiec@hotmail.com &gt;
+ * @author      William Niemiec &lt; williamniemiec@hotmail.com &gt;
+ * 
+ * @see         https://github.com/williamniemiec/utils/tree/master/src/task/Scheduler
  */
 public class Scheduler {
 	
