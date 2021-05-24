@@ -8,10 +8,10 @@ namespace wniemiec {namespace util {namespace task
 {
     /**
      * Responsible for executing routines within time intervals.
-	 *
-	 * @author     William Niemiec &lt; williamniemiec@hotmail.com &gt;
-	 *
-	 * @see        https://github.com/williamniemiec/utils/tree/master/src/task/Scheduler
+     *
+     * @author     William Niemiec &lt; williamniemiec@hotmail.com &gt;
+     *
+     * @see        https://github.com/williamniemiec/utils/tree/master/src/task/Scheduler
      */
     class Scheduler
     {
