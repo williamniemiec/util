@@ -4,7 +4,7 @@
 #include <pthread.h>
 #include <map>
 
-namespace wniemiec::util::task
+namespace wniemiec {namespace util {namespace task
 {
     /**
      * Responsible for executing routines within time intervals.
@@ -19,12 +19,12 @@ namespace wniemiec::util::task
     //		Attributes
     //-------------------------------------------------------------------------
     private:
-        static std::map<long, bool> delayRoutines;
-        static std::map<long, bool> intervalRoutines;
-        static std::map<long, bool> timeoutRoutine;
-        static long currentRoutineId;
-        static std::function<void(void)>& currentRoutine;
-        static pthread_t controlThread;
+        static std::map<unsigned long, bool> delay_routines;
+        static std::map<unsigned long, bool> interval_routines;
+        static std::map<unsigned long, bool> timeout_routine;
+        static unsigned long current_routine_id;
+        static std::function<void(void)>& current_routine;
+        static pthread_t control_thread;
 
 
     //-------------------------------------------------------------------------
@@ -47,7 +47,7 @@ namespace wniemiec::util::task
          *
          * @return      Routine id, being useful for future cancellation
          */
-        static long set_timeout(const std::function<void(void)>& routine, long delay);
+        static unsigned long set_timeout(const std::function<void(void)>& routine, long delay);
 
         /**
          * Cancels a timed action which was previously established by a call
@@ -55,7 +55,7 @@ namespace wniemiec::util::task
          *
          * @param       id Routine id
          */
-        static void clear_timeout(long id);
+        static void clear_timeout(unsigned long id);
 
         /**
          * Repeatedly calls a routine with a fixed time delay between each
@@ -69,7 +69,7 @@ namespace wniemiec::util::task
          *
          * @see         Scheduler::clear_interval
          */
-        static long set_interval(const std::function<void(void)>& routine, long interval);
+        static unsigned long set_interval(const std::function<void(void)>& routine, long interval);
 
         /**
          * Cancels a timed, repeating action, which was previously established
@@ -77,7 +77,7 @@ namespace wniemiec::util::task
          *
          * @param       id Routine identifier
          */
-        static void clear_interval(long id);
+        static void clear_interval(unsigned long id);
 
         /**
          * Runs a routine within a timeout.
@@ -101,4 +101,4 @@ namespace wniemiec::util::task
         static bool has_routine_finished();
         static void finish_routine();
     };
-}
+}}}

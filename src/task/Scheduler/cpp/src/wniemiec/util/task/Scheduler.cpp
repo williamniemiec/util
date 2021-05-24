@@ -1,12 +1,8 @@
 #include "../../../../include/wniemiec/util/task/Scheduler.hpp"
 
 #include <ctime>
-#ifdef LINUX
-#   include <unistd.h>
-#endif
-#ifdef WINDOWS
-#   include <windows.h>
-#endif
+#include <chrono>
+#include <thread>
 
 using namespace wniemiec::util::task;
 
@@ -15,92 +11,92 @@ std::function<void(void)> null_routine = [](){};
 //-------------------------------------------------------------------------
 //		Attributes
 //-------------------------------------------------------------------------
-std::map<long, bool> Scheduler::delayRoutines = std::map<long, bool>();
-std::map<long, bool> Scheduler::intervalRoutines = std::map<long, bool>();
-std::map<long, bool> Scheduler::timeoutRoutine = std::map<time_t, bool>();
-std::function<void(void)>& Scheduler::currentRoutine = null_routine;
-long Scheduler::currentRoutineId;
-pthread_t Scheduler::controlThread;
+std::map<unsigned long, bool> Scheduler::delay_routines = std::map<unsigned long, bool>();
+std::map<unsigned long, bool> Scheduler::interval_routines = std::map<unsigned long, bool>();
+std::map<unsigned long, bool> Scheduler::timeout_routine = std::map<unsigned long, bool>();
+std::function<void(void)>& Scheduler::current_routine = null_routine;
+unsigned long Scheduler::current_routine_id;
+pthread_t Scheduler::control_thread;
 
 
 //-------------------------------------------------------------------------
 //		Methods
 //-------------------------------------------------------------------------
-long Scheduler::set_timeout(const std::function<void(void)>& routine, long delay)
+unsigned long Scheduler::set_timeout(const std::function<void(void)>& routine, long delay)
 {
     initialize_routine_id();
-    currentRoutine = routine;
+    current_routine = routine;
 
     pthread_t thread;
     pthread_create(&thread, nullptr, delay_control_routine, (void*) delay);
 
-    return currentRoutineId;
+    return current_routine_id;
 }
 
 void Scheduler::initialize_routine_id()
 {
-    currentRoutineId = get_current_time();
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+    current_routine_id = get_current_time();
 }
 
 void* Scheduler::delay_control_routine(void* arg)
 {
     long delay = (long) arg;
-    long id = currentRoutineId;
-    const std::function<void(void)>& routine = currentRoutine;
+    unsigned long id = current_routine_id;
+    const std::function<void(void)> routine = current_routine;
 
-    delayRoutines[id] = true;
+    if (delay < 0)
+        throw std::invalid_argument("Delay cannot be negative");
 
-    #ifdef LINUX
-        usleep(interval * 1000);
-    #endif
-    #ifdef WINDOWS
-        Sleep(interval);
-    #endif
+    delay_routines[id] = true;
 
-    if (delayRoutines[id])
+    std::this_thread::sleep_for(std::chrono::milliseconds(delay));
+
+    if (delay_routines[id])
         routine();
+
+    return nullptr;
 }
 
-void Scheduler::clear_timeout(long id)
+void Scheduler::clear_timeout(unsigned long id)
 {
-    delayRoutines[id] = false;
+    delay_routines[id] = false;
 }
 
-long Scheduler::set_interval(const std::function<void(void)>& routine, long interval)
+unsigned long Scheduler::set_interval(const std::function<void(void)>& routine, long interval)
 {
     initialize_routine_id();
-    currentRoutine = routine;
+    current_routine = routine;
 
     pthread_t thread;
     pthread_create(&thread, nullptr, interval_control_routine, (void*) interval);
 
-    return currentRoutineId;
+    return current_routine_id;
 }
 
 void* Scheduler::interval_control_routine(void* arg)
 {
     long interval = (long) arg;
-    long id = currentRoutineId;
-    const std::function<void(void)>& routine = currentRoutine;
+    unsigned long id = current_routine_id;
+    const std::function<void(void)> routine = current_routine;
 
-    intervalRoutines[id] = true;
+    if (interval < 0)
+        throw std::invalid_argument("Interval cannot be negative");
 
-    while (intervalRoutines[id])
+    interval_routines[id] = true;
+
+    while (interval_routines[id])
     {
+        std::this_thread::sleep_for(std::chrono::milliseconds(interval));
         routine();
-
-        #ifdef LINUX
-            usleep(interval * 1000);
-        #endif
-        #ifdef WINDOWS
-            Sleep(interval);
-        #endif
     }
+
+    return nullptr;
 }
 
-void Scheduler::clear_interval(long id)
+void Scheduler::clear_interval(unsigned long id)
 {
-    intervalRoutines[id] = false;
+    interval_routines[id] = false;
 }
 
 bool Scheduler::set_timeout_to_routine(const std::function<void(void)>& routine, long timeout)
@@ -116,10 +112,10 @@ void Scheduler::run_routine(const std::function<void(void)>& routine)
 {
     initialize_routine_id();
 
-    timeoutRoutine[currentRoutineId] = false;
-    currentRoutine = routine;
+    timeout_routine[current_routine_id] = false;
+    current_routine = routine;
 
-    pthread_create(&controlThread, nullptr, control_routine, nullptr);
+    pthread_create(&control_thread, nullptr, control_routine, nullptr);
 }
 
 time_t Scheduler::get_current_time()
@@ -129,26 +125,22 @@ time_t Scheduler::get_current_time()
 
 void* Scheduler::control_routine(void* args)
 {
-    time_t id = currentRoutineId;
-    std::function<void(void)>& routine = currentRoutine;
+    time_t id = current_routine_id;
+    std::function<void(void)>& routine = current_routine;
 
     routine();
-    timeoutRoutine[id] = true;
+    timeout_routine[id] = true;
+
+    return nullptr;
 }
 
 void Scheduler::wait_routine_for(long time)
 {
-    time_t id = currentRoutineId;
     time_t start = get_current_time();
 
     while ((time_elapsed_in_milliseconds(start) < (double) time) && !has_routine_finished())
     {
-        #ifdef LINUX
-            usleep(200 * 1000);
-        #endif
-        #ifdef WINDOWS
-            Sleep(200);
-        #endif
+        std::this_thread::sleep_for(std::chrono::milliseconds(200));
     }
 }
 
@@ -159,10 +151,10 @@ double Scheduler::time_elapsed_in_milliseconds(time_t start)
 
 bool Scheduler::has_routine_finished()
 {
-    return timeoutRoutine[currentRoutineId];
+    return timeout_routine[current_routine_id];
 }
 
 void Scheduler::finish_routine()
 {
-    pthread_cancel(controlThread);
+    pthread_cancel(control_thread);
 }
