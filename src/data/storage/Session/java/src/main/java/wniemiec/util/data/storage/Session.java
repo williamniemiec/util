@@ -1,11 +1,6 @@
 package wniemiec.util.data.storage;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -197,9 +192,14 @@ public class Session {
 			return;
 
 		try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(sessionFile))) {
-			content = (Map<String, Object>)ois.readObject();
+			content = (Map<String, Object>) ois.readObject();
 		}		
 		catch (ClassNotFoundException e) {
+			// Will never happens (native classes)
+		}
+		catch (EOFException e) {
+			// Empty file
+			content = new HashMap<>();
 		}
 	}
 	
