@@ -204,6 +204,9 @@ public class Session {
 	}
 	
 	private void store() throws IOException {
+		if (content.isEmpty())
+			return;
+
 		try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(sessionFile))) {
 			oos.writeObject(content);
 			oos.flush();

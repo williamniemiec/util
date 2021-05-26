@@ -6,7 +6,7 @@
 
   <groupId>wniemiec.util.data.storage</groupId>
   <artifactId>session</artifactId>
-  <version>1.0.1</version>
+  <version>1.0.2</version>
 
   <name>Session</name>
   <description>Session manager that stores information obtained at run time.</description>
