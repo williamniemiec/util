@@ -1,6 +1,9 @@
 package wniemiec.util.task;
 
 import java.util.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledExecutorService;
 
 /**
  * Responsible for calling routines after a certain time or whenever the the 
@@ -18,15 +21,27 @@ public class Scheduler {
 	/**
 	 * Stores routines sent to setInterval method along with its ids.
 	 */
-	private static Map<Integer, Timer> intervalRoutines = new HashMap<>();
+	private static final Map<Integer, Timer> intervalRoutines;
 	
 	/**
 	 * Stores routines sent to setTimeout method along with its ids.
 	 */
-	private static Map<Integer, Timer> delayRoutines = new HashMap<>();
+	private static final Map<Integer, Timer> delayRoutines;
 
-	private static Map<Long, Boolean> timeoutRoutines = new HashMap<>();
+	private static final Map<Long, Boolean> timeoutRoutines;
+	private static final Map<Long, Future> timeoutRoutineThreads;
 	private static long currentTimeoutRoutineId;
+
+
+	//-------------------------------------------------------------------------
+	//		Initialization blocks
+	//-------------------------------------------------------------------------
+	static {
+		intervalRoutines = new HashMap<>();
+		delayRoutines = new HashMap<>();
+		timeoutRoutines = new HashMap<>();
+		timeoutRoutineThreads = new HashMap<>();
+	}
 
 	
 	//-------------------------------------------------------------------------
@@ -167,7 +182,8 @@ public class Scheduler {
 	}
 
 	/**
-	 * Runs a routine within a timeout.
+	 * Runs a routine within a timeout. If the routine does not end on time, an
+	 * interrupt signal will be sent to it.
 	 *
 	 * @param		routine Routine
 	 * @param		timeout Maximum execution time (in milliseconds)
@@ -199,15 +215,18 @@ public class Scheduler {
 	private static void runRoutine(Runnable routine) {
 		initializeRoutineId();
 
-		Thread t = new Thread(() -> {
+		ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
+		Future handler = executor.submit(() -> {
 			routine.run();
 
-			if (timeoutRoutines.containsKey(currentTimeoutRoutineId))
+			if (timeoutRoutines.containsKey(currentTimeoutRoutineId)) {
 				timeoutRoutines.put(currentTimeoutRoutineId, true);
+				timeoutRoutineThreads.remove(currentTimeoutRoutineId);
+			}
 		});
+		executor.shutdown();
 
-		t.setDaemon(true);
-		t.start();
+		timeoutRoutineThreads.put(currentTimeoutRoutineId, handler);
 	}
 
 	private static void initializeRoutineId() {
@@ -246,7 +265,11 @@ public class Scheduler {
 	}
 
 	private static void finishRoutine() {
-		if (!hasRoutineFinished())
-			timeoutRoutines.remove(currentTimeoutRoutineId);
+		if (hasRoutineFinished())
+			return;
+
+		timeoutRoutines.remove(currentTimeoutRoutineId);
+		timeoutRoutineThreads.get(currentTimeoutRoutineId).cancel(true);
+		timeoutRoutineThreads.remove(currentTimeoutRoutineId);
 	}
 }
