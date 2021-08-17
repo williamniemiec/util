@@ -1,0 +1,12 @@
+[submodule "cpp/string-utils"]
+	path = cpp/string-utils
+	url = https://github.com/wniemiec-util-cpp/string-utils
+[submodule "java/string-utils"]
+	path = java/string-utils
+	url = https://github.com/wniemiec-util-java/string-utils
+[submodule "java/reserved-character-replacer"]
+	path = java/reserved-character-replacer
+	url = https://github.com/wniemiec-util-java/reserved-character-replacer
+[submodule "java/parser-balance"]
+	path = java/parser-balance
+	url = https://github.com/wniemiec-util-java/parser-balance
